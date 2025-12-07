@@ -8,4 +8,4 @@
 - 暂无记录的问题，如有新增请补充。
 
 # 第5阶段待修复问题：
-- 暂无记录的问题，如有新增请补充。
+- 本地调试阶段临时放宽安全：已对 `/swagger-ui/**`、`/v3/api-docs/**` 放行并在 `application-local.yml` 启用 `springdoc.swagger-ui.enabled=true`，方便免登录查看文档。上线前需还原为需认证或移除放行规则。

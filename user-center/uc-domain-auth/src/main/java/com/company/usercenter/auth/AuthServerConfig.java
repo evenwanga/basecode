@@ -97,7 +97,8 @@ public class AuthServerConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(registry -> registry
                 .requestMatchers("/api/identities/register", "/api/identities/otp/**",
-                        "/api/tenants/**", "/actuator/**").permitAll()
+                        "/api/tenants/**", "/actuator/**",
+                        "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated());
         http.formLogin(Customizer.withDefaults());
         return http.build();
