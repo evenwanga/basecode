@@ -32,10 +32,23 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Base64;
+import java.util.Optional;
+import java.util.UUID;
 
 @Configuration
 public class AuthServerConfig {
@@ -109,14 +122,8 @@ public class AuthServerConfig {
     }
 
     @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        KeyPair keyPair = generateRsaKey();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        RSAKey rsaKey = new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(java.util.UUID.randomUUID().toString())
-                .build();
+    public JWKSource<SecurityContext> jwkSource(@Value("${auth.jwk.path:var/jwk-rsa.pem}") String jwkPath) {
+        RSAKey rsaKey = loadOrCreateRsaKey(jwkPath);
         JWKSet jwkSet = new JWKSet(rsaKey);
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
@@ -132,6 +139,79 @@ public class AuthServerConfig {
         return AuthorizationServerSettings.builder()
                 .issuer(issuerUri)
                 .build();
+    }
+
+    private RSAKey loadOrCreateRsaKey(String pemPath) {
+        if (pemPath == null || pemPath.isBlank()) {
+            return buildRsaKey(generateRsaKey());
+        }
+        Path path = Paths.get(pemPath);
+        try {
+            if (Files.exists(path)) {
+                RSAPrivateCrtKey privateKey = readPrivateKey(path);
+                RSAPublicKey publicKey = derivePublicKey(privateKey);
+                return buildRsaKey(privateKey, publicKey);
+            }
+            KeyPair pair = generateRsaKey();
+            writePrivateKey(path, pair.getPrivate());
+            return buildRsaKey(pair);
+        } catch (Exception ex) {
+            throw new IllegalStateException("无法加载或创建 JWK", ex);
+        }
+    }
+
+    private RSAKey buildRsaKey(KeyPair keyPair) {
+        return buildRsaKey((RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+    }
+
+    private RSAKey buildRsaKey(RSAPrivateKey privateKey, RSAPublicKey publicKey) {
+        String keyId = thumbprint(publicKey);
+        return new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(keyId)
+                .build();
+    }
+
+    private RSAPrivateCrtKey readPrivateKey(Path path) throws Exception {
+        String pem = Files.readString(path);
+        String sanitized = pem.replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replaceAll("\\s", "");
+        byte[] decoded = Base64.getDecoder().decode(sanitized);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decoded);
+        return (RSAPrivateCrtKey) java.security.KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+    }
+
+    private RSAPublicKey derivePublicKey(RSAPrivateCrtKey privateKey) throws Exception {
+        RSAPublicKeySpec keySpec = new RSAPublicKeySpec(privateKey.getModulus(), privateKey.getPublicExponent());
+        return (RSAPublicKey) java.security.KeyFactory.getInstance("RSA").generatePublic(keySpec);
+    }
+
+    private void writePrivateKey(Path path, PrivateKey privateKey) throws IOException {
+        byte[] encoded = privateKey.getEncoded();
+        String base64 = Base64.getEncoder().encodeToString(encoded);
+        StringBuilder sb = new StringBuilder();
+        sb.append("-----BEGIN PRIVATE KEY-----\n");
+        for (int i = 0; i < base64.length(); i += 64) {
+            int end = Math.min(i + 64, base64.length());
+            sb.append(base64, i, end).append("\n");
+        }
+        sb.append("-----END PRIVATE KEY-----\n");
+        Path parent = path.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        Files.writeString(path, sb.toString());
+    }
+
+    private String thumbprint(PublicKey publicKey) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(publicKey.getEncoded());
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+        } catch (Exception ex) {
+            return UUID.randomUUID().toString();
+        }
     }
 
     private static KeyPair generateRsaKey() {

@@ -1,5 +1,6 @@
 # Build outputs
 **/target/
+**/var/
 *.log
 **/logs/
 
