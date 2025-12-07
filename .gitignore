@@ -1,6 +1,9 @@
 # Build outputs
 **/target/
 **/var/
+.m2/
+data/postgres/
+data/redis/
 *.log
 **/logs/
 
