@@ -16,9 +16,9 @@ class VerificationCodeServiceTest {
 
     @Test
     void issueAndVerifyOtp() {
-        VerificationCodeService service = new VerificationCodeService(store);
+        VerificationCodeService service = new VerificationCodeService(store, "123456");
         String code = service.issueCode("user@example.com", "login", 6, Duration.ofSeconds(5));
-        assertThat(code).hasSize(6);
+        assertThat(code).isEqualTo("123456");
         assertThat(service.verify("user@example.com", "login", code)).isTrue();
         assertThat(service.verify("user@example.com", "login", code)).isFalse(); // 已消费
     }

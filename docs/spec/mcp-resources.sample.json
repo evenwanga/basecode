@@ -1,0 +1,16 @@
+{
+  "resources": [
+    {
+      "type": "file-system",
+      "root": ".",
+      "readOnly": true,
+      "include": ["AGENTS.md", "plan.md", "buglist.md", "user-center/**", "company-platform/**", "docs/spec/**"],
+      "exclude": ["**/target/**", "**/var/**", ".git/**"]
+    },
+    {
+      "type": "git",
+      "repo": ".",
+      "expose": ["log", "diff", "status"]
+    }
+  ]
+}

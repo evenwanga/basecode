@@ -16,20 +16,21 @@ import java.util.Random;
 public class VerificationCodeService {
 
     private static final Random RANDOM = new SecureRandom();
-    private static final String DEFAULT_CODE = "000000";
 
     private final EphemeralKeyValueStore store;
+    private final String fixedCode;
 
-    public VerificationCodeService(EphemeralKeyValueStore store) {
+    public VerificationCodeService(EphemeralKeyValueStore store,
+                                   @org.springframework.beans.factory.annotation.Value("${otp.fixed-code:}") String fixedCode) {
         this.store = store;
+        this.fixedCode = fixedCode;
     }
 
     /**
      * 生成指定长度的数字验证码并缓存，返回生成结果（便于测试或调用方发送）。
      */
     public String issueCode(String receiver, String type, int length, Duration ttl) {
-        // 开发阶段使用固定码，便于联调；后续可切换为随机码
-        String code = DEFAULT_CODE;
+        String code = (fixedCode != null && !fixedCode.isBlank()) ? fixedCode : randomDigits(length);
         String key = otpKey(receiver, type);
         store.put(key, code, ttl);
         return code;
@@ -53,7 +54,6 @@ public class VerificationCodeService {
         return "otp:" + type.toLowerCase(Locale.ROOT) + ":" + receiver;
     }
 
-    @SuppressWarnings("unused") // 预留：切换随机验证码时启用
     private String randomDigits(int length) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {

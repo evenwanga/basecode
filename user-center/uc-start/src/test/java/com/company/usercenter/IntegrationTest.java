@@ -36,6 +36,7 @@ class IntegrationTest {
         registry.add("spring.datasource.url", pg::getJdbcUrl);
         registry.add("spring.datasource.username", pg::getUsername);
         registry.add("spring.datasource.password", pg::getPassword);
+        registry.add("otp.fixed-code", () -> "000000"); // 测试环境使用固定验证码
     }
 
     @Autowired
