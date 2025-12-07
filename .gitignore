@@ -1,0 +1,16 @@
+# Build outputs
+**/target/
+*.log
+**/logs/
+
+# IDE metadata
+.idea/
+*.iml
+.project
+.classpath
+
+# OS files
+.DS_Store
+
+# Local environment
+.env

@@ -1,0 +1,2 @@
+-- 占位基线迁移：后续将补充实际表结构（Tenant/User/Role 等）。
+-- 当前脚本仅用于注册 Flyway baseline，便于后续增量迁移。

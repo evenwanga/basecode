@@ -1,0 +1,27 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.company</groupId>
+    <artifactId>user-center</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>company-platform</artifactId>
+  <packaging>pom</packaging>
+  <name>company-platform</name>
+  <description>Shared scaffolding and platform modules</description>
+
+  <modules>
+    <module>platform-dependencies</module>
+    <module>platform-common</module>
+    <module>platform-web</module>
+    <module>platform-jpa</module>
+    <module>platform-security</module>
+    <module>platform-ai</module>
+    <module>platform-test</module>
+  </modules>
+
+</project>

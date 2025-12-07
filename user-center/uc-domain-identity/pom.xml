@@ -1,0 +1,48 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.company</groupId>
+    <artifactId>user-center-modules</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>uc-domain-identity</artifactId>
+  <name>uc-domain-identity</name>
+  <description>User identity and membership domain implementation</description>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.company</groupId>
+        <artifactId>platform-dependencies</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.company</groupId>
+      <artifactId>platform-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.company</groupId>
+      <artifactId>platform-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.company</groupId>
+      <artifactId>platform-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>
