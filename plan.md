@@ -9,6 +9,7 @@
 - 已完成：`mvn clean verify` 全量构建通过；`AGENTS.md` 改为中文贡献指南，明确本地 DB/Testcontainers 配置与开发规范。
 - 已完成：架构调整为使用 Redis 承载验证码/短期状态/缓存，配置写入 `.env.example`，文档同步。
 - 第三阶段：完成 Spring Authorization Server 接入（JDBC 授权/同意服务、双安全链、JWK 生成）、领域用户登录接入、默认客户端初始化，新增 OAuth2 表迁移；单元测试补充并通过。待处理：JWK 未持久化（重启令牌失效）已录入 buglist。
+- 第四阶段：新增客户端管理接口（注册客户端到 Auth Server，不回传明文密钥）、当前用户信息接口、租户切换接口并校验成员关系；补充客户端服务单测。集成测试仍依赖本机 Docker（Testcontainers），在无 Docker 环境需跳过或切换配置。
 
 ### 阶段进度对照
 
