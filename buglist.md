@@ -3,3 +3,4 @@
 
 # 第3阶段待修复问题：
 - 授权服务器 JWK 每次启动随机生成且未持久化，导致重启后既有访问/刷新令牌全部失效；需改为持久化密钥（如配置文件或数据库/云 KMS），至少在非本地环境保持稳定。
+- `DomainUserDetailsService.loadUserByUsername` 将多类型标识符当作邮箱查用户，`identifier` 可能是手机号等，非邮箱场景会查不到用户；应使用 `identity.getUserId()` 直接加载用户。
