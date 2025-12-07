@@ -4,17 +4,19 @@
 
 ### 最新执行进展（截至当前）
 
-- 已完成：去除 Hibernate FilterDef 导致的 ASM 解析异常，改为仓储按租户 ID 查询；多租户线程上下文通过 `TenantHeaderFilter` 保障。
-- 已完成：Auth 占位安全链改为放行全部请求（后续再细分权限），`mvn test -pl user-center/uc-start -am` 集成测试通过，覆盖租户头缺失返回 400 与租户隔离校验。
-- 已完成：`mvn clean verify` 全量构建通过；`AGENTS.md` 改为中文贡献指南，明确本地 DB/Testcontainers 配置与开发规范。
-- 已完成：架构调整为使用 Redis 承载验证码/短期状态/缓存，配置写入 `.env.example`，文档同步。
-- 第三阶段：完成 Spring Authorization Server 接入（JDBC 授权/同意服务、双安全链、JWK 生成）、领域用户登录接入、默认客户端初始化，新增 OAuth2 表迁移；单元测试补充并通过。待处理：JWK 未持久化（重启令牌失效）已录入 buglist。
-- 第四阶段：新增客户端管理接口（注册客户端到 Auth Server，不回传明文密钥）、当前用户信息接口、租户切换接口并校验成员关系；补充客户端服务单测。集成测试仍依赖本机 Docker（Testcontainers），在无 Docker 环境需跳过或切换配置。
+- 基础设施：多租户上下文与异常链稳定，Redis 配置与文档已同步；全量构建可在本机通过。
+- 认证授权：Spring Authorization Server 接入完成，`DomainUserDetailsService` 改为按 identity.userId 加载用户；默认客户端初始化。
+- 应用接口：客户端注册不再回传明文 secret；租户切换校验成员关系；注册接口增加邮箱/手机号查重，避免命中唯一约束直接返回 500。
+- 质量保障：Access 绑定请求补齐 @NotNull，Tenant code 查重；身份/租户控制器单测、授权域单测及 Testcontainers 集成测试在 Docker 环境下通过（需配置 `DOCKER_HOST=unix:///Users/wangyiwen/.docker/run/docker.sock`）。
+- 待处理：JWK 持久化缺失、验证码固定值问题已记录在 buglist。
 
 ### 阶段进度对照
 
-- **第一阶段（脚手架与基础设施初始化）**：已完成骨架、模块依赖对齐、基础配置（全局异常、JPA 审计、密码编码器、多租户头过滤器）、Auth 占位、Flyway 基线及本地专用 PG 实例。
-- **第二阶段（核心领域模型实现）**：已完成租户/组织、用户/身份、成员、角色/权限实体与仓储，基础服务与 API（租户创建、组织查询、用户注册、身份查询、成员绑定），以及数据库迁移与多租户头必填集成测试。
+- **第一阶段（脚手架与基础设施初始化）**：已完成。
+- **第二阶段（核心领域模型实现）**：已完成，留存验证码随机化问题（见 buglist）。
+- **第三阶段（认证与授权服务）**：能力已上线，JWK 持久化待办（buglist 持续跟踪）。
+- **第四阶段（对外接口与应用层）**：已完成客户端管理、用户信息、租户切换接口及校验。
+- **第五阶段（TDD/AI 集成）**：进行中，已补充控制器单测并跑通 Docker 集成测；后续继续扩展覆盖率与 AI/MCP 配置。
 
 -----
 

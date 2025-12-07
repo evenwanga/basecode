@@ -29,10 +29,10 @@ public class DomainUserDetailsService implements UserDetailsService {
         if (identity.getSecret() == null) {
             throw new UsernameNotFoundException("账号未设置密码");
         }
-        User user = identityService.findByEmail(username)
+        User user = identityService.findById(identity.getUserId())
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
         boolean enabled = "ACTIVE".equalsIgnoreCase(user.getStatus());
-        return org.springframework.security.core.userdetails.User.withUsername(username)
+        return org.springframework.security.core.userdetails.User.withUsername(identity.getIdentifier())
                 .password(Objects.requireNonNull(identity.getSecret()))
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
                 .disabled(!enabled)

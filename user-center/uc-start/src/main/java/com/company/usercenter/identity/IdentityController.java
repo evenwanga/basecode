@@ -35,7 +35,7 @@ public class IdentityController {
     /** 注册本地账号（邮箱 + 密码）。 */
     @PostMapping("/register")
     public ApiResponse<User> register(@Valid @RequestBody RegisterRequest request) {
-        User created = identityService.registerUser(request.displayName(), request.email(), request.password());
+        User created = identityService.registerUser(request.displayName(), request.email(), request.phone(), request.password());
         return ApiResponse.created(created);
     }
 
@@ -80,6 +80,7 @@ public class IdentityController {
 
     public record RegisterRequest(@NotBlank String displayName,
                                   @Email String email,
+                                  @Size(max = 50) String phone,
                                   @NotBlank String password) { }
 
     public record SendOtpRequest(@Email String email) { }

@@ -8,6 +8,7 @@
 - 前置：JDK 17、Maven 3.9+、本机 Docker（用于 Testcontainers），PostgreSQL/Redis 配置参考 `.env.example`（默认 PG 端口 5433，Redis 端口 6379）。
 - 全量构建与测试：`mvn clean verify`。仅跑启动模块集成测试：`mvn test -pl user-center/uc-start -am`（会自动拉起 Postgres Testcontainer）。
 - 本地启动：`mvn -pl user-center/uc-start spring-boot:run -Dspring-boot.run.profiles=local`，需确保数据库可达；快速迭代可加 `-DskipTests`。
+- 如遇 Maven 仓库写权限/网络受限，可优先使用本机 `~/.m2` 缓存并加 `-o` 离线运行；启用 Testcontainers 时设置 `DOCKER_HOST=unix:///Users/wangyiwen/.docker/run/docker.sock` 并允许访问 Docker 套接字。
 
 ## 代码风格与命名
 - Java 4 空格缩进，UTF-8。包名小写（平台 `com.company.platform.*`，业务 `com.company.usercenter.*`）；类 PascalCase，方法/字段 camelCase，常量 UPPER_SNAKE_CASE。

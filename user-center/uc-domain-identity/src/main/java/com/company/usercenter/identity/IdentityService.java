@@ -26,24 +26,34 @@ public class IdentityService {
     }
 
     @Transactional
-    public User registerUser(String displayName, String email, String rawPassword) {
+    public User registerUser(String displayName, String email, String phone, String rawPassword) {
         // 注册前先做唯一性校验，避免命中数据库唯一约束返回 500
-        if (email != null && userRepository.findByPrimaryEmail(email).isPresent()) {
+        boolean emailPresent = email != null && !email.isBlank();
+        boolean phonePresent = phone != null && !phone.isBlank();
+        if (!emailPresent && !phonePresent) {
+            throw new IllegalArgumentException("邮箱或手机号至少填写一个");
+        }
+        String identifier = emailPresent ? email : phone;
+        if (emailPresent && userRepository.findByPrimaryEmail(email).isPresent()) {
             throw new IllegalArgumentException("邮箱已被占用");
         }
-        if (email != null && userIdentityRepository.findByIdentifierAndType(email, UserIdentity.IdentityType.LOCAL_PASSWORD).isPresent()) {
+        if (phonePresent && userRepository.findByPrimaryPhone(phone).isPresent()) {
+            throw new IllegalArgumentException("手机号已被占用");
+        }
+        if (userIdentityRepository.findByIdentifierAndType(identifier, UserIdentity.IdentityType.LOCAL_PASSWORD).isPresent()) {
             throw new IllegalArgumentException("账号已存在");
         }
 
         User user = new User();
         user.setDisplayName(displayName);
         user.setPrimaryEmail(email);
+        user.setPrimaryPhone(phone);
         user.setStatus("ACTIVE");
         User saved = userRepository.save(user);
 
         UserIdentity identity = new UserIdentity();
         identity.setUserId(saved.getId());
-        identity.setIdentifier(email);
+        identity.setIdentifier(identifier);
         identity.setType(UserIdentity.IdentityType.LOCAL_PASSWORD);
         identity.setSecret(passwordEncoder.encode(rawPassword));
         userIdentityRepository.save(identity);

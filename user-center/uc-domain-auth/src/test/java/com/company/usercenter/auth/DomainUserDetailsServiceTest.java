@@ -45,7 +45,7 @@ class DomainUserDetailsServiceTest {
 
         when(identityService.findIdentity("test@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.of(identity));
-        when(identityService.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(identityService.findById(identity.getUserId())).thenReturn(Optional.of(user));
 
         var details = service.loadUserByUsername("test@example.com");
 
@@ -78,7 +78,7 @@ class DomainUserDetailsServiceTest {
 
         when(identityService.findIdentity("disable@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.of(identity));
-        when(identityService.findByEmail("disable@example.com")).thenReturn(Optional.of(user));
+        when(identityService.findById(identity.getUserId())).thenReturn(Optional.of(user));
 
         var details = service.loadUserByUsername("disable@example.com");
         assertThat(details.isEnabled()).isFalse();

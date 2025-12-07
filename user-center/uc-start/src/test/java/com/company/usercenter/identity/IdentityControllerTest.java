@@ -6,6 +6,7 @@ import com.company.usercenter.identity.service.VerificationCodeService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
@@ -37,19 +38,32 @@ class IdentityControllerTest {
     @Test
     void meShouldReturnProfileWhenAuthenticated() {
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("bob@example.com", "N/A")
+                new UsernamePasswordAuthenticationToken("bob@example.com", "N/A",
+                        java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")))
         );
 
         User user = new User();
+        setId(user, UUID.randomUUID());
         user.setDisplayName("Bob");
         user.setPrimaryEmail("bob@example.com");
         user.setStatus("ACTIVE");
         when(identityService.findByIdentifier("bob@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.of(user));
+        when(identityService.findByEmail("bob@example.com")).thenReturn(Optional.of(user));
 
         ApiResponse<UserProfileResponse> resp = controller.me();
 
         assertThat(resp.success()).isTrue();
         assertThat(resp.data().displayName()).isEqualTo("Bob");
+    }
+
+    private void setId(Object target, UUID id) {
+        try {
+            java.lang.reflect.Field field = target.getClass().getSuperclass().getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(target, id);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

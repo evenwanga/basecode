@@ -52,7 +52,7 @@ class IntegrationTest {
         var tenant = tenantService.createTenant("t1", "租户1");
         assertThat(tenant.getId()).isNotNull();
 
-        var user = identityService.registerUser("张三", "test@example.com", "Passw0rd!");
+        var user = identityService.registerUser("张三", "test@example.com", null, "Passw0rd!");
         assertThat(user.getId()).isNotNull();
 
         identityService.addMembership(user.getId(), tenant.getId(), null, "admin");
@@ -79,7 +79,7 @@ class IntegrationTest {
     @Test
     void otpFlowWithFixedCode() {
         var tenant = tenantService.createTenant("t2", "租户2");
-        var user = identityService.registerUser("李四", "otp@example.com", "Passw0rd!");
+        var user = identityService.registerUser("李四", "otp@example.com", null, "Passw0rd!");
         identityService.addMembership(user.getId(), tenant.getId(), null, "user");
 
         RestClient client = RestClient.builder()
