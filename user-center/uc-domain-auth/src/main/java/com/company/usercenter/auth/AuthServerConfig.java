@@ -14,9 +14,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -27,10 +27,8 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
-import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.web.SecurityFilterChain;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,39 +64,21 @@ public class AuthServerConfig {
     }
 
     /**
-     * 授权服务器安全链：开启 OAuth2/OIDC 端点，使用 JWT。
+     * 单链安全配置（本地调试）：放行 Swagger/静态资源/公共接口，其他认证。
      */
     @Bean
     @Order(1)
-    public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http,
-                                                             AuthenticationManager authenticationManager) throws Exception {
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
-        RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
-
-        http.securityMatcher(endpointsMatcher)
-                .authenticationManager(authenticationManager)
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
-                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
-                .apply(authorizationServerConfigurer);
-
-        authorizationServerConfigurer.oidc(Customizer.withDefaults());
-        return http.build();
-    }
-
-    /**
-     * 应用接口安全链：暂时放行公共接口，其余仍可按需保护。
-     */
-    @Bean
-    @Order(2)
     public SecurityFilterChain appSecurityFilterChain(HttpSecurity http,
                                                       AuthenticationManager authenticationManager) throws Exception {
         http.authenticationManager(authenticationManager);
         http.csrf(AbstractHttpConfigurer::disable);
+        http.securityMatcher(org.springframework.security.web.util.matcher.AnyRequestMatcher.INSTANCE);
         http.authorizeHttpRequests(registry -> registry
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
+                        "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .requestMatchers("/api/identities/register", "/api/identities/otp/**",
-                        "/api/tenants/**", "/actuator/**",
-                        "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        "/api/tenants/**", "/actuator/**").permitAll()
                 .anyRequest().authenticated());
         http.formLogin(Customizer.withDefaults());
         return http.build();
