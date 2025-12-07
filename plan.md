@@ -8,6 +8,7 @@
 - 已完成：Auth 占位安全链改为放行全部请求（后续再细分权限），`mvn test -pl user-center/uc-start -am` 集成测试通过，覆盖租户头缺失返回 400 与租户隔离校验。
 - 已完成：`mvn clean verify` 全量构建通过；`AGENTS.md` 改为中文贡献指南，明确本地 DB/Testcontainers 配置与开发规范。
 - 已完成：架构调整为使用 Redis 承载验证码/短期状态/缓存，配置写入 `.env.example`，文档同步。
+- 第三阶段：完成 Spring Authorization Server 接入（JDBC 授权/同意服务、双安全链、JWK 生成）、领域用户登录接入、默认客户端初始化，新增 OAuth2 表迁移；单元测试补充并通过。待处理：JWK 未持久化（重启令牌失效）已录入 buglist。
 
 ### 阶段进度对照
 
@@ -94,16 +95,17 @@ user-center-monolith/
 
 #### 第三阶段：认证与授权服务 (Auth & Security)
 
-**目标**：实现 OIDC/OAuth2.1 能力，替代 Redis 进行会话管理。
+**目标**：实现 OIDC/OAuth2.1 能力，替代 Redis 进行会话管理。当前进度：已实现，待补 JWK 持久化。
 
 1.  **Spring Authorization Server 集成**：
       * 在 `uc-domain-auth` 中引入 `spring-boot-starter-oauth2-authorization-server`。
-      * **关键点**：配置 `JdbcOAuth2AuthorizationService` 和 `JdbcOAuth2AuthorizationConsentService`。
-      * **Redis 策略**：会话黑名单、临时 state/nonce 可放 Redis，授权码/令牌持久化仍在 PostgreSQL（保持可审计）。
-      * Schema 初始化：使用 Spring Auth Server 官方提供的 SQL 脚本初始化表结构 (`oauth2_authorization`, `oauth2_registered_client` 等)。
+      * **配置**：JDBC RegisteredClient/Authorization/Consent 服务，JWK 生成、JWT 解码，双安全链（授权端点 + 应用接口）。
+      * **状态**：已完成，JWK 目前内存生成，重启会使旧令牌失效（待持久化）。
+      * Schema 初始化：新增迁移 `V4__oauth2_authorization_server.sql` 创建 `oauth2_*` 表。
 2.  **登录流程**：
-      * 实现自定义 `AuthenticationProvider`，对接 Identity 域的用户数据。
-      * 支持 `authorization_code` 模式（适配 SPA/Web）和 `client_credentials` 模式（适配 M2M）。
+      * 实现 `DomainUserDetailsService` 对接 Identity 域本地密码身份。
+      * 支持 `authorization_code`、`client_credentials`、`refresh_token`。
+      * 默认客户端：启动时初始化 `user-center-web`（见 `DefaultOAuth2ClientInitializer`）。
 
 #### 第四阶段：对外接口与应用层 (Application Layer)
 

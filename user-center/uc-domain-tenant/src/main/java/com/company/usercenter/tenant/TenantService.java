@@ -19,6 +19,9 @@ public class TenantService {
 
     @Transactional
     public Tenant createTenant(String code, String name) {
+        if (tenantRepository.findByCode(code).isPresent()) {
+            throw new IllegalArgumentException("租户编码已存在");
+        }
         Tenant tenant = new Tenant();
         tenant.setCode(code);
         tenant.setName(name);

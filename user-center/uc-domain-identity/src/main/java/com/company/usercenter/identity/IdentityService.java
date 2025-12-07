@@ -27,6 +27,14 @@ public class IdentityService {
 
     @Transactional
     public User registerUser(String displayName, String email, String rawPassword) {
+        // 注册前先做唯一性校验，避免命中数据库唯一约束返回 500
+        if (email != null && userRepository.findByPrimaryEmail(email).isPresent()) {
+            throw new IllegalArgumentException("邮箱已被占用");
+        }
+        if (email != null && userIdentityRepository.findByIdentifierAndType(email, UserIdentity.IdentityType.LOCAL_PASSWORD).isPresent()) {
+            throw new IllegalArgumentException("账号已存在");
+        }
+
         User user = new User();
         user.setDisplayName(displayName);
         user.setPrimaryEmail(email);

@@ -4,6 +4,7 @@ import com.company.platform.common.ApiResponse;
 import com.company.platform.jpa.TenantContext;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,5 +59,5 @@ public class AccessController {
     public record CreatePermissionRequest(@NotBlank String code,
                                           String description) { }
 
-    public record BindRequest(UUID roleId, UUID permissionId) { }
+    public record BindRequest(@NotNull UUID roleId, @NotNull UUID permissionId) { }
 }

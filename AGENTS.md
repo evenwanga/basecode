@@ -21,6 +21,9 @@
 - 提交遵循 Conventional Commits（如 `feat: add tenant aggregate`、`fix: tenant header validation`），保持粒度可回滚。
 - PR 需说明变更范围、关联 issue、数据库迁移影响、已执行的测试命令及结果；涉及接口请附请求/响应示例或 curl。
 
+## 缺陷记录
+- 所有阶段遗留问题需记录在 `buglist.md`，按“第X阶段待修复问题：”分段；后续 review/验收发现的新问题也要追加到对应阶段段落。
+
 ## 安全与配置提示
 - 机密信息放环境变量或被忽略的本地文件，不要入库；数据库账号按最小权限配置。
 - `/api/**` 默认要求 `X-Tenant-Id` 头（`/api/tenants` 和 `/actuator` 例外），缺失会返回 400；无鉴权逻辑前，测试阶段默认放行，但后续请补齐权限控制。
