@@ -62,6 +62,17 @@ public class IdentityService {
         return userIdentityRepository.findByIdentifierAndType(identifier, type);
     }
 
+    public Optional<User> findByIdentifier(String identifier, UserIdentity.IdentityType type) {
+        return userIdentityRepository.findByIdentifierAndType(identifier, type)
+                .flatMap(identity -> userRepository.findById(identity.getUserId()));
+    }
+
+    public boolean hasMembership(UUID userId, UUID tenantId) {
+        return membershipRepository.findByUserId(userId)
+                .stream()
+                .anyMatch(m -> tenantId.equals(m.getTenantId()));
+    }
+
     public void addMembership(UUID userId, UUID tenantId, UUID orgUnitId, String roles) {
         Membership membership = new Membership();
         membership.setUserId(userId);

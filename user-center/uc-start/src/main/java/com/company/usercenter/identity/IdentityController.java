@@ -55,9 +55,7 @@ public class IdentityController {
             return ApiResponse.error("未登录", org.springframework.http.HttpStatus.UNAUTHORIZED);
         }
         String principal = auth.getName();
-        Optional<UserIdentity> identity = identityService.findIdentity(principal, UserIdentity.IdentityType.LOCAL_PASSWORD);
-        Optional<User> user = identity
-                .flatMap(id -> identityService.findById(id.getUserId()))
+        Optional<User> user = identityService.findByIdentifier(principal, UserIdentity.IdentityType.LOCAL_PASSWORD)
                 .or(() -> identityService.findByEmail(principal));
         return user
                 .map(u -> ApiResponse.ok(new UserProfileResponse(u.getId(), u.getDisplayName(), u.getPrimaryEmail(), u.getStatus())))

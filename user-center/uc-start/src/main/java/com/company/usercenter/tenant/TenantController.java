@@ -2,8 +2,12 @@ package com.company.usercenter.tenant;
 
 import com.company.platform.common.ApiResponse;
 import com.company.usercenter.api.dto.SwitchTenantRequest;
+import com.company.usercenter.identity.IdentityService;
+import com.company.usercenter.identity.UserIdentity;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,9 +22,11 @@ import java.util.UUID;
 public class TenantController {
 
     private final TenantService tenantService;
+    private final IdentityService identityService;
 
-    public TenantController(TenantService tenantService) {
+    public TenantController(TenantService tenantService, IdentityService identityService) {
         this.tenantService = tenantService;
+        this.identityService = identityService;
     }
 
     /** 创建租户并生成根组织。 */
@@ -47,6 +53,20 @@ public class TenantController {
     public ApiResponse<Tenant> switchTenant(@Valid @RequestBody SwitchTenantRequest request) {
         Tenant tenant = tenantService.findById(request.tenantId())
                 .orElseThrow(() -> new IllegalArgumentException("租户不存在"));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ApiResponse.error("未登录", org.springframework.http.HttpStatus.UNAUTHORIZED);
+        }
+        String principal = auth.getName();
+        var user = identityService.findByIdentifier(principal, UserIdentity.IdentityType.LOCAL_PASSWORD)
+                .or(() -> identityService.findByEmail(principal))
+                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+
+        if (!identityService.hasMembership(user.getId(), tenant.getId())) {
+            return ApiResponse.error("无权访问该租户", org.springframework.http.HttpStatus.FORBIDDEN);
+        }
+
         return ApiResponse.ok(tenant);
     }
 

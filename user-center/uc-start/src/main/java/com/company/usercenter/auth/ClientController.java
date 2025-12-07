@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-
 @RestController
 @RequestMapping("/api/clients")
 public class ClientController {
@@ -27,9 +25,8 @@ public class ClientController {
         var response = new ClientRegistrationResponse(
                 java.util.UUID.fromString(client.getId()),
                 client.getClientId(),
-                request.clientSecret(), // 返回明文仅限创建时
-                new ArrayList<>(client.getRedirectUris()),
-                new ArrayList<>(client.getScopes())
+                java.util.List.copyOf(client.getRedirectUris()),
+                java.util.List.copyOf(client.getScopes())
         );
         return ApiResponse.created(response);
     }
