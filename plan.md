@@ -4,19 +4,20 @@
 
 ### 最新执行进展（截至当前）
 
-- 基础设施：多租户上下文与异常链稳定，Redis 配置与文档已同步；全量构建可在本机通过。
-- 认证授权：Spring Authorization Server 接入完成，`DomainUserDetailsService` 改为按 identity.userId 加载用户；默认客户端初始化。
-- 应用接口：客户端注册不再回传明文 secret；租户切换校验成员关系；注册接口增加邮箱/手机号查重，避免命中唯一约束直接返回 500。
-- 质量保障：Access 绑定请求补齐 @NotNull，Tenant code 查重；身份/租户控制器单测、授权域单测及 Testcontainers 集成测试在 Docker 环境下通过（需配置 `DOCKER_HOST=unix:///Users/wangyiwen/.docker/run/docker.sock`）。
-- 待处理：JWK 持久化缺失、验证码固定值问题已记录在 buglist。
+- 基础设施：多租户上下文与异常链稳定，Redis/PG 配置与文档同步；全量构建可在本机通过。
+- 认证授权：Spring Authorization Server 接入完成，`DomainUserDetailsService` 按 identity.userId 加载用户；默认客户端初始化；JWK 已持久化到可配置文件。
+- 应用接口：客户端注册不再回传明文 secret；租户切换校验成员关系；注册接口增加邮箱/手机号查重，避免命中唯一约束直接返回 500；Access 绑定请求补齐 @NotNull；Tenant code 查重。
+- 质量保障：身份/租户控制器单测、授权域单测及 Testcontainers 集成测试在 Docker 环境下通过（需配置 `DOCKER_HOST=unix:///Users/wangyiwen/.docker/run/docker.sock`）；验证码逻辑改为随机码并可配置固定值用于测试。
+- 运行方式：已完成本地 Docker 化运行，`docker-compose` 提供 postgres(5543)、redis(6380)、app(8081→8080)；`uc-start` 默认产出可执行 Boot Jar。
+- 待处理：继续扩展测试覆盖与 AI/MCP 配置；阶段任务按路线推进。
 
 ### 阶段进度对照
 
 - **第一阶段（脚手架与基础设施初始化）**：已完成。
-- **第二阶段（核心领域模型实现）**：已完成，留存验证码随机化问题（见 buglist）。
-- **第三阶段（认证与授权服务）**：能力已上线，JWK 持久化待办（buglist 持续跟踪）。
+- **第二阶段（核心领域模型实现）**：已完成。
+- **第三阶段（认证与授权服务）**：已完成（JWK 已持久化）。
 - **第四阶段（对外接口与应用层）**：已完成客户端管理、用户信息、租户切换接口及校验。
-- **第五阶段（TDD/AI 集成）**：进行中，已补充控制器单测并跑通 Docker 集成测；后续继续扩展覆盖率与 AI/MCP 配置。
+- **第五阶段（TDD/AI 集成）**：进行中，单测与集成测覆盖核心域，MCP 配置待进一步完善。
 
 -----
 
