@@ -16,7 +16,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.UUID;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class IntegrationTest {
 
     @Container
+    @SuppressWarnings("resource")
     static PostgreSQLContainer<?> pg = new PostgreSQLContainer<>("postgres:15")
             .withDatabaseName("user_center_test")
             .withUsername("user_center")

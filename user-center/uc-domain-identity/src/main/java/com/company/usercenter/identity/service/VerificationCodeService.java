@@ -53,6 +53,7 @@ public class VerificationCodeService {
         return "otp:" + type.toLowerCase(Locale.ROOT) + ":" + receiver;
     }
 
+    @SuppressWarnings("unused") // 预留：切换随机验证码时启用
     private String randomDigits(int length) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
