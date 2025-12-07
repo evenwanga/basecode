@@ -14,7 +14,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -74,7 +73,6 @@ public class AuthServerConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.securityMatcher(org.springframework.security.web.util.matcher.AnyRequestMatcher.INSTANCE);
         http.authorizeHttpRequests(registry -> registry
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                         "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .requestMatchers("/api/identities/register", "/api/identities/otp/**",
