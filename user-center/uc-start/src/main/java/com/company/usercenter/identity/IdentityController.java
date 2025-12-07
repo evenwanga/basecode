@@ -1,6 +1,7 @@
 package com.company.usercenter.identity;
 
 import com.company.platform.common.ApiResponse;
+import com.company.usercenter.api.dto.UserProfileResponse;
 import com.company.usercenter.identity.service.VerificationCodeService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +45,23 @@ public class IdentityController {
         Optional<User> user = identityService.findByEmail(email);
         return user.map(ApiResponse::ok)
                 .orElseGet(() -> ApiResponse.error("未找到用户", org.springframework.http.HttpStatus.NOT_FOUND));
+    }
+
+    /** 获取当前登录用户信息。 */
+    @GetMapping("/me")
+    public ApiResponse<UserProfileResponse> me() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ApiResponse.error("未登录", org.springframework.http.HttpStatus.UNAUTHORIZED);
+        }
+        String principal = auth.getName();
+        Optional<UserIdentity> identity = identityService.findIdentity(principal, UserIdentity.IdentityType.LOCAL_PASSWORD);
+        Optional<User> user = identity
+                .flatMap(id -> identityService.findById(id.getUserId()))
+                .or(() -> identityService.findByEmail(principal));
+        return user
+                .map(u -> ApiResponse.ok(new UserProfileResponse(u.getId(), u.getDisplayName(), u.getPrimaryEmail(), u.getStatus())))
+                .orElseGet(() -> ApiResponse.error("用户不存在", org.springframework.http.HttpStatus.UNAUTHORIZED));
     }
 
     /** 下发登录验证码（开发阶段返回验证码，生产应通过邮箱/短信发送）。 */

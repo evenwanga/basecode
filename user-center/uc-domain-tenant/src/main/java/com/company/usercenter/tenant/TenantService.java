@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -59,6 +60,10 @@ public class TenantService {
 
     public List<Tenant> listTenants() {
         return tenantRepository.findAll();
+    }
+
+    public Optional<Tenant> findById(UUID tenantId) {
+        return tenantRepository.findById(tenantId);
     }
 
     public List<OrganizationUnit> listOrgUnitsForCurrentTenant() {

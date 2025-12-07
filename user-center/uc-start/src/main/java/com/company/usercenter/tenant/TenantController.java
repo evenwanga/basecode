@@ -1,6 +1,7 @@
 package com.company.usercenter.tenant;
 
 import com.company.platform.common.ApiResponse;
+import com.company.usercenter.api.dto.SwitchTenantRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,14 @@ public class TenantController {
     @GetMapping("/org-units")
     public ApiResponse<List<OrganizationUnit>> listOrgUnits() {
         return ApiResponse.ok(tenantService.listOrgUnitsForCurrentTenant());
+    }
+
+    /** 切换租户，校验租户存在后返回信息（客户端负责持久化所选租户）。 */
+    @PostMapping("/switch")
+    public ApiResponse<Tenant> switchTenant(@Valid @RequestBody SwitchTenantRequest request) {
+        Tenant tenant = tenantService.findById(request.tenantId())
+                .orElseThrow(() -> new IllegalArgumentException("租户不存在"));
+        return ApiResponse.ok(tenant);
     }
 
     public record CreateTenantRequest(@NotBlank String code, @NotBlank String name) { }

@@ -54,6 +54,10 @@ public class IdentityService {
         return userRepository.findByPrimaryEmail(email);
     }
 
+    public Optional<User> findById(UUID userId) {
+        return userRepository.findById(userId);
+    }
+
     public Optional<UserIdentity> findIdentity(String identifier, UserIdentity.IdentityType type) {
         return userIdentityRepository.findByIdentifierAndType(identifier, type);
     }

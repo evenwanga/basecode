@@ -40,6 +40,10 @@
     </dependency>
     <dependency>
       <groupId>com.company</groupId>
+      <artifactId>uc-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.company</groupId>
       <artifactId>uc-domain-identity</artifactId>
     </dependency>
     <dependency>
