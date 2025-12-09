@@ -8,4 +8,4 @@
 - 暂无记录的问题，如有新增请补充。
 
 # 第5阶段待修复问题：
-- 本地调试阶段临时放宽安全：已对 `/swagger-ui/**`、`/v3/api-docs/**` 放行并在 `application-local.yml` 启用 `springdoc.swagger-ui.enabled=true`，方便免登录查看文档。上线前需还原为需认证或移除放行规则。
+- ✅ [已修复] Swagger 免登录访问：使用 Spring Security 7 新 DSL `http.oauth2AuthorizationServer()` 配置双安全链，授权端点链（Order 0）仅匹配 `/oauth2/**` 和 `/.well-known/**`，应用链（Order 1）放行 Swagger/actuator/公共接口。上线前需评估是否保留或移除放行规则。
