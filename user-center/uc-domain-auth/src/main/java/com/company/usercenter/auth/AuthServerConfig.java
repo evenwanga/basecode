@@ -25,9 +25,10 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,7 +64,25 @@ public class AuthServerConfig {
     }
 
     /**
-     * 单链安全配置（本地调试）：放行 Swagger/静态资源/公共接口，其他认证。
+     * 授权服务器安全链（Order 0）：仅匹配 OAuth2/OIDC 端点，其他请求由 appSecurityFilterChain 处理。
+     */
+    @Bean
+    @Order(0)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
+                                                                      AuthenticationManager authenticationManager) throws Exception {
+        http.securityMatcher("/oauth2/**", "/.well-known/**")
+                .authenticationManager(authenticationManager)
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                .csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
+                .oauth2AuthorizationServer(authorizationServer -> authorizationServer
+                        .oidc(Customizer.withDefaults()));
+        
+        return http.build();
+    }
+
+    /**
+     * 应用安全链（Order 1）：放行 Swagger/静态资源/公共接口，其他需认证。
      */
     @Bean
     @Order(1)
@@ -71,12 +90,12 @@ public class AuthServerConfig {
                                                       AuthenticationManager authenticationManager) throws Exception {
         http.authenticationManager(authenticationManager);
         http.csrf(AbstractHttpConfigurer::disable);
-        http.securityMatcher(org.springframework.security.web.util.matcher.AnyRequestMatcher.INSTANCE);
         http.authorizeHttpRequests(registry -> registry
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                         "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .requestMatchers("/api/identities/register", "/api/identities/otp/**",
                         "/api/tenants/**", "/actuator/**").permitAll()
+                .requestMatchers("/login", "/error").permitAll()
                 .anyRequest().authenticated());
         http.formLogin(Customizer.withDefaults());
         return http.build();
@@ -108,7 +127,7 @@ public class AuthServerConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+        return NimbusJwtDecoder.withJwkSource(jwkSource).build();
     }
 
     @Bean
