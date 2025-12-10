@@ -38,6 +38,18 @@
       <groupId>com.company</groupId>
       <artifactId>platform-common</artifactId>
     </dependency>
+    <!-- 依赖 uc-api 获取 DTO 定义 -->
+    <dependency>
+      <groupId>com.company</groupId>
+      <artifactId>uc-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- 依赖 uc-domain-identity 获取 MembershipRepository -->
+    <dependency>
+      <groupId>com.company</groupId>
+      <artifactId>uc-domain-identity</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

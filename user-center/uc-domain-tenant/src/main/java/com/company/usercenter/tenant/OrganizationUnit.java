@@ -26,6 +26,9 @@ public class OrganizationUnit extends BaseEntity {
     @Column(nullable = false)
     private String status = "ACTIVE";
 
+    @Column
+    private Integer sortOrder = 0;
+
     public UUID getTenantId() {
         return tenantId;
     }
@@ -56,5 +59,13 @@ public class OrganizationUnit extends BaseEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }

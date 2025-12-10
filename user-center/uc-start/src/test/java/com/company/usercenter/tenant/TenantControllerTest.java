@@ -23,8 +23,9 @@ class TenantControllerTest {
 
     TenantService tenantService = mock(TenantService.class);
     IdentityService identityService = mock(IdentityService.class);
+    OrganizationService organizationService = mock(OrganizationService.class);
 
-    TenantController controller = new TenantController(tenantService, identityService);
+    TenantController controller = new TenantController(tenantService, identityService, organizationService);
 
     @AfterEach
     void clearContext() {

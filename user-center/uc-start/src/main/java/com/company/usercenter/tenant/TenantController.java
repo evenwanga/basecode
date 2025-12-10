@@ -1,7 +1,11 @@
 package com.company.usercenter.tenant;
 
 import com.company.platform.common.ApiResponse;
+import com.company.platform.jpa.TenantContext;
+import com.company.usercenter.api.dto.CreateOrgUnitRequest;
+import com.company.usercenter.api.dto.OrgTreeNode;
 import com.company.usercenter.api.dto.SwitchTenantRequest;
+import com.company.usercenter.api.dto.UpdateOrgUnitRequest;
 import com.company.usercenter.identity.IdentityService;
 import com.company.usercenter.identity.UserIdentity;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,13 +18,17 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/tenants")
@@ -29,10 +37,13 @@ public class TenantController {
 
     private final TenantService tenantService;
     private final IdentityService identityService;
+    private final OrganizationService organizationService;
 
-    public TenantController(TenantService tenantService, IdentityService identityService) {
+    public TenantController(TenantService tenantService, IdentityService identityService,
+                            OrganizationService organizationService) {
         this.tenantService = tenantService;
         this.identityService = identityService;
+        this.organizationService = organizationService;
     }
 
     @Operation(
@@ -108,6 +119,72 @@ public class TenantController {
         }
 
         return ApiResponse.ok(tenant);
+    }
+
+    // ==================== 组织管理 API ====================
+
+    @Operation(
+            summary = "创建组织单元",
+            description = "在当前租户下创建一个组织单元（部门）。如指定 parentId 则创建为子组织，否则创建为顶级组织。"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "组织创建成功"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "参数校验失败或父组织不存在")
+    })
+    @PostMapping("/org-units")
+    public ApiResponse<OrganizationUnit> createOrgUnit(
+            @Parameter(description = "创建组织请求体", required = true)
+            @Valid @RequestBody CreateOrgUnitRequest request) {
+        UUID tenantId = UUID.fromString(TenantContext.requireTenantId());
+        OrganizationUnit created = organizationService.createOrgUnit(tenantId, request.parentId(), request.name());
+        return ApiResponse.created(created);
+    }
+
+    @Operation(
+            summary = "更新组织单元",
+            description = "更新指定组织单元的名称和/或排序序号。"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "更新成功"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "组织不存在")
+    })
+    @PutMapping("/org-units/{orgId}")
+    public ApiResponse<OrganizationUnit> updateOrgUnit(
+            @Parameter(description = "组织单元ID", required = true)
+            @PathVariable UUID orgId,
+            @Parameter(description = "更新组织请求体", required = true)
+            @Valid @RequestBody UpdateOrgUnitRequest request) {
+        OrganizationUnit updated = organizationService.updateOrgUnit(orgId, request.name(), request.sortOrder());
+        return ApiResponse.ok(updated);
+    }
+
+    @Operation(
+            summary = "删除组织单元",
+            description = "删除指定的组织单元。如果组织下存在子组织或成员，则无法删除。"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "删除成功"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "组织不存在或存在子组织/成员")
+    })
+    @DeleteMapping("/org-units/{orgId}")
+    public ApiResponse<Void> deleteOrgUnit(
+            @Parameter(description = "组织单元ID", required = true)
+            @PathVariable UUID orgId) {
+        organizationService.deleteOrgUnit(orgId);
+        return ApiResponse.ok(null);
+    }
+
+    @Operation(
+            summary = "获取组织树",
+            description = "获取当前租户下的完整组织树结构，按 sortOrder 排序。"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "查询成功")
+    })
+    @GetMapping("/org-tree")
+    public ApiResponse<List<OrgTreeNode>> getOrgTree() {
+        UUID tenantId = UUID.fromString(TenantContext.requireTenantId());
+        return ApiResponse.ok(organizationService.getOrgTree(tenantId));
     }
 
     @Schema(description = "创建租户请求")
