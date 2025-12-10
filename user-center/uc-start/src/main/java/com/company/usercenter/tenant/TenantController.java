@@ -38,12 +38,14 @@ public class TenantController {
     private final TenantService tenantService;
     private final IdentityService identityService;
     private final OrganizationService organizationService;
+    private final PlatformTenantService platformTenantService;
 
     public TenantController(TenantService tenantService, IdentityService identityService,
-                            OrganizationService organizationService) {
+                            OrganizationService organizationService, PlatformTenantService platformTenantService) {
         this.tenantService = tenantService;
         this.identityService = identityService;
         this.organizationService = organizationService;
+        this.platformTenantService = platformTenantService;
     }
 
     @Operation(
@@ -73,6 +75,31 @@ public class TenantController {
     @GetMapping
     public ApiResponse<List<Tenant>> list() {
         return ApiResponse.ok(tenantService.listTenants());
+    }
+
+    @Operation(
+            summary = "获取平台租户",
+            description = "返回系统内置的平台租户信息。平台租户是系统唯一的管理租户，用于平台级别的管理操作。"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "查询成功，返回平台租户"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "平台租户未初始化")
+    })
+    @GetMapping("/platform")
+    public ApiResponse<Tenant> getPlatformTenant() {
+        return ApiResponse.ok(platformTenantService.getPlatformTenant());
+    }
+
+    @Operation(
+            summary = "查询业务租户列表",
+            description = "获取除平台租户外的所有业务租户列表。用于用户选择工作租户场景。"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "查询成功，返回业务租户列表")
+    })
+    @GetMapping("/business")
+    public ApiResponse<List<Tenant>> listBusinessTenants() {
+        return ApiResponse.ok(tenantService.listBusinessTenants());
     }
 
     @Operation(

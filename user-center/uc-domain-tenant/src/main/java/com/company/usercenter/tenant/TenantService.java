@@ -74,4 +74,13 @@ public class TenantService {
         UUID tenantId = UUID.fromString(tenantIdStr);
         return organizationUnitRepository.findByTenantId(tenantId);
     }
+
+    /**
+     * 查询业务租户列表（排除平台租户）
+     *
+     * @return 非平台类型的租户列表
+     */
+    public List<Tenant> listBusinessTenants() {
+        return tenantRepository.findByTypeNot(Tenant.TenantType.PLATFORM);
+    }
 }
