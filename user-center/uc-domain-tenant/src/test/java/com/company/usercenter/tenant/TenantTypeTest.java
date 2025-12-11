@@ -55,3 +55,6 @@ class TenantTypeTest {
         assertThat(tenant.getType()).isEqualTo(Tenant.TenantType.INTERNAL);
     }
 }
+
+
+
