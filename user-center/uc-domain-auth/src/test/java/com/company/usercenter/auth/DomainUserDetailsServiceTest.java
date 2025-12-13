@@ -43,7 +43,11 @@ class DomainUserDetailsServiceTest {
         user.setPrimaryEmail("test@example.com");
         user.setStatus("ACTIVE");
 
-        when(identityService.findIdentity("test@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
+        // Set Tenant Context
+        UUID tenantId = UUID.randomUUID();
+        com.company.platform.jpa.TenantContext.setTenantId(tenantId.toString());
+
+        when(identityService.findIdentity(tenantId, "test@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.of(identity));
         when(identityService.findById(identity.getUserId())).thenReturn(Optional.of(user));
 
@@ -52,15 +56,22 @@ class DomainUserDetailsServiceTest {
         assertThat(details.getUsername()).isEqualTo("test@example.com");
         assertThat(details.getPassword()).isEqualTo("encoded");
         assertThat(details.isEnabled()).isTrue();
+
+        com.company.platform.jpa.TenantContext.clear();
     }
 
     @Test
     void loadUserShouldFailWhenIdentityMissing() {
-        when(identityService.findIdentity("missing@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
+        UUID tenantId = UUID.randomUUID();
+        com.company.platform.jpa.TenantContext.setTenantId(tenantId.toString());
+
+        when(identityService.findIdentity(tenantId, "missing@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.loadUserByUsername("missing@example.com"))
                 .isInstanceOf(UsernameNotFoundException.class);
+
+        com.company.platform.jpa.TenantContext.clear();
     }
 
     @Test
@@ -76,11 +87,16 @@ class DomainUserDetailsServiceTest {
         user.setPrimaryEmail("disable@example.com");
         user.setStatus("DISABLED");
 
-        when(identityService.findIdentity("disable@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
+        UUID tenantId = UUID.randomUUID();
+        com.company.platform.jpa.TenantContext.setTenantId(tenantId.toString());
+
+        when(identityService.findIdentity(tenantId, "disable@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.of(identity));
         when(identityService.findById(identity.getUserId())).thenReturn(Optional.of(user));
 
         var details = service.loadUserByUsername("disable@example.com");
         assertThat(details.isEnabled()).isFalse();
+
+        com.company.platform.jpa.TenantContext.clear();
     }
 }

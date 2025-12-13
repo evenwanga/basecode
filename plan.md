@@ -22,12 +22,12 @@
 - **第三阶段（认证与授权服务）**：✅ 已完成（JWK 已持久化）。
 - **第四阶段（对外接口与应用层）**：✅ 已完成客户端管理、用户信息、租户切换接口及校验。
 - **第五阶段（TDD/AI 集成）**：🔄 进行中，单测与集成测覆盖核心域，MCP 配置待进一步完善。
-- **第六阶段（领域增强：平台租户与组织架构）**：⏳ 待开始，详见 [plan-domain-enhancement.md](./plan-domain-enhancement.md)。
-  - 6.1 Tenant 类型支持 [P0]
-  - 6.2 平台租户服务 [P0]
-  - 6.3 组织管理 API [P1]
-  - 6.4 MembershipRepository 扩展 [P1]
-  - 6.5 测试完善 [P1]
+- **第六阶段（领域增强：平台租户与组织架构）**：✅ 已完成。
+  - [x] 6.1 Tenant 类型支持 [P0] (Tenant.type, V5 Migration)
+  - [x] 6.2 MembershipRepository 扩展 [P0] (Exists/Find查询)
+  - [x] 6.3 平台租户服务 [P0] (PlatformTenantService)
+  - [x] 6.4 组织管理 API [P1] (OrganizationService CRUD/Tree)
+  - [x] 6.5 测试完善 [P1] (集成测试已通过)
 
 -----
 
@@ -144,6 +144,41 @@ user-center-monolith/
 2.  **AI/MCP 集成**：
       * 按照文档要求，创建 `AGENTS.md` 和 `docs/spec/*.md`。
       * 编写 MCP Server 工具类（可选），用于让 AI 读取项目结构。
+
+#### 第六阶段：平台租户与组织架构增强 (Platform Tenant & Org)
+
+**目标**：完善多租户模型，支持平台级管理与复杂的组织架构。
+
+1.  **Tenant 类型与平台租户**：
+      * [x] **Tenant Type**：实体增加 `type` (PLATFORM/INTERNAL/CUSTOMER/PARTNER)。
+      * [x] **Platform Tenant**：通过 Migration 预置 ID 为 `0...1` 的平台租户（Code: `__platform__`）。
+      * [x] **Service**：`PlatformTenantService` 提供平台判定、成员校验与成员管理能力。
+      * [x] **API**：`/api/tenants/platform` (平台管理) 与 `/api/tenants/business` (业务租户列表) 分离。
+2.  **组织架构 (Organization)**：
+      * [x] **Tree Structure**：支持无限级父子组织 (`parentId`)，递归构建树形结构。
+      * [x] **CRUD**：完整的增删改查，包含严格的校验（父组织归属、删除前检查子节点/成员）。
+3.  **Repository 增强**：
+      * [x] `MembershipRepository`：增加 `existsByUserIdAndTenantId`、`findByOrgUnitId` 等查询能力。
+      * [x] `TenantRepository`：增加 `findByType` 支持。
+164: 
+165: #### 第七阶段：多租户身份架构升级 (Multi-Tenant Identity Architecture)
+166: 
+167: **目标**：解决“C端用户租户隔离”与“自然人全局归一”的架构矛盾。
+168: 
+169: 1.  **User-Profile 分层模型重构**：
+170:       * **Layer 1: 租户账号 (User)**：
+171:           * 改造 `User` 和 `UserIdentity` 实体，增加 `tenantId` 字段。
+172:           * 移除全局唯一约束，改为 `(tenantId, identifier)` 联合唯一。
+173:           * 效果：支持同一邮箱在不同租户下注册独立账号。
+174:       * **Layer 2: 自然人 (Person)**：
+175:           * 新增 `Person` 实体，存储全局唯一的身份信息（如已验证的手机号、身份证）。
+176:           * 在 `users` 表添加 `person_id` 外键。
+177: 2.  **身份归一化策略**：
+178:       * 在注册或验证码认证通过时，触发归一化逻辑。
+179:       * 若检测到相同 verified_mobile，自动关联至同一 Person ID，实现跨应用自然人识别。
+180: 3.  **API 与流程适配**：
+181:       * **Implicit Tenant**：增加 C 端默认隐式租户配置（如 `SocialAppTenant`）。
+182:       * **Context Aware**：注册与登录接口强制依赖 TenantContext。
 
 -----
 

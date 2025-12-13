@@ -27,42 +27,60 @@ class IdentityServiceTest {
     @Mock
     MembershipRepository membershipRepository;
     @Mock
+    private PersonRepository personRepository;
+    @Mock
     PasswordEncoder passwordEncoder;
 
     IdentityService service;
 
     @BeforeEach
     void setUp() {
-        service = new IdentityService(userRepository, userIdentityRepository, membershipRepository, passwordEncoder);
+        service = new IdentityService(userRepository, userIdentityRepository, membershipRepository, personRepository,
+                passwordEncoder);
     }
 
     @Test
     void registerShouldFailWhenEmailExists() {
-        when(userRepository.findByPrimaryEmail("dup@example.com")).thenReturn(Optional.of(new User()));
+        UUID tenantId = UUID.randomUUID();
+        when(userRepository.findByTenantIdAndPrimaryEmail(tenantId, "dup@example.com"))
+                .thenReturn(Optional.of(new User()));
 
-        assertThatThrownBy(() -> service.registerUser("张三", "dup@example.com", null, "pwd"))
+        assertThatThrownBy(() -> service.registerUser(tenantId, "张三", "dup@example.com", null, "pwd"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("邮箱已被占用");
     }
 
     @Test
     void registerShouldFallbackToPhoneIdentifier() {
+        UUID tenantId = UUID.randomUUID();
         when(passwordEncoder.encode("pwd")).thenReturn("encoded");
-        when(userRepository.findByPrimaryPhone("13800000000")).thenReturn(Optional.empty());
-        when(userIdentityRepository.findByIdentifierAndType("13800000000", UserIdentity.IdentityType.LOCAL_PASSWORD))
-                .thenReturn(Optional.empty());
+        // Update mocks to be tenant-aware. findByTenantIdAndPrimaryPhone is skipped in
+        // code if phone is null?
+        // Wait, logic: if phonePresent, check phone.
+        // In this test case, phone ("138...") IS passed. So check is executed.
+        when(userRepository.findByTenantIdAndPrimaryPhone(tenantId, "13800000000")).thenReturn(Optional.empty());
+        // userIdentityRepository stub removed
+
+        when(personRepository.findByVerifiedMobile("13800000000")).thenReturn(Optional.empty());
+        when(personRepository.save(any(Person.class))).thenAnswer(invocation -> {
+            Person p = invocation.getArgument(0);
+            p.setId(UUID.randomUUID());
+            return p;
+        });
+
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
             setId(u, UUID.randomUUID());
             return u;
         });
 
-        service.registerUser("李四", null, "13800000000", "pwd");
+        service.registerUser(tenantId, "李四", null, "13800000000", "pwd");
 
         ArgumentCaptor<UserIdentity> identityCaptor = ArgumentCaptor.forClass(UserIdentity.class);
         verify(userIdentityRepository).save(identityCaptor.capture());
         assertThat(identityCaptor.getValue().getIdentifier()).isEqualTo("13800000000");
         assertThat(identityCaptor.getValue().getType()).isEqualTo(UserIdentity.IdentityType.LOCAL_PASSWORD);
+        assertThat(identityCaptor.getValue().getTenantId()).isEqualTo(tenantId);
     }
 
     private void setId(Object target, UUID id) {

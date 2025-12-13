@@ -8,5 +8,9 @@ import java.util.UUID;
 
 public interface UserIdentityRepository extends JpaRepository<UserIdentity, UUID> {
     List<UserIdentity> findByUserId(UUID userId);
-    Optional<UserIdentity> findByIdentifierAndType(String identifier, UserIdentity.IdentityType type);
+
+    List<UserIdentity> findByIdentifierAndType(String identifier, UserIdentity.IdentityType type);
+
+    Optional<UserIdentity> findByTenantIdAndIdentifierAndType(UUID tenantId, String identifier,
+            UserIdentity.IdentityType type);
 }

@@ -5,6 +5,7 @@ import com.company.usercenter.api.dto.SwitchTenantRequest;
 import com.company.usercenter.identity.IdentityService;
 import com.company.usercenter.identity.User;
 import com.company.usercenter.identity.UserIdentity;
+import com.company.usercenter.tenant.PlatformTenantService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,7 +27,8 @@ class TenantControllerTest {
     OrganizationService organizationService = mock(OrganizationService.class);
     PlatformTenantService platformTenantService = mock(PlatformTenantService.class);
 
-    TenantController controller = new TenantController(tenantService, identityService, organizationService, platformTenantService);
+    TenantController controller = new TenantController(tenantService, identityService, organizationService,
+            platformTenantService);
 
     @AfterEach
     void clearContext() {
@@ -50,14 +52,13 @@ class TenantControllerTest {
 
         User user = new User();
         setId(user, UUID.randomUUID());
-        when(identityService.findByIdentifier("alice@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
+        when(identityService.findByIdentifier(tenantId, "alice@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.of(user));
         when(identityService.hasMembership(user.getId(), tenantId)).thenReturn(false);
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("alice@example.com", "N/A",
-                        java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")))
-        );
+                        java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))));
 
         ApiResponse<Tenant> resp = controller.switchTenant(new SwitchTenantRequest(tenantId));
         assertThat(resp.success()).isFalse();
@@ -73,14 +74,13 @@ class TenantControllerTest {
 
         User user = new User();
         setId(user, UUID.randomUUID());
-        when(identityService.findByIdentifier("alice@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
+        when(identityService.findByIdentifier(tenantId, "alice@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
                 .thenReturn(Optional.of(user));
         when(identityService.hasMembership(user.getId(), tenantId)).thenReturn(true);
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("alice@example.com", "N/A",
-                        java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")))
-        );
+                        java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))));
 
         ApiResponse<Tenant> resp = controller.switchTenant(new SwitchTenantRequest(tenantId));
         assertThat(resp.success()).isTrue();

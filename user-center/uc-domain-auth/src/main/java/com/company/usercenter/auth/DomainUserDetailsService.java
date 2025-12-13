@@ -24,7 +24,9 @@ public class DomainUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserIdentity identity = identityService.findIdentity(username, UserIdentity.IdentityType.LOCAL_PASSWORD)
+        java.util.UUID tenantId = java.util.UUID.fromString(com.company.platform.jpa.TenantContext.requireTenantId());
+        UserIdentity identity = identityService
+                .findIdentity(tenantId, username, UserIdentity.IdentityType.LOCAL_PASSWORD)
                 .orElseThrow(() -> new UsernameNotFoundException("账号不存在"));
         if (identity.getSecret() == null) {
             throw new UsernameNotFoundException("账号未设置密码");

@@ -25,6 +25,9 @@ public class UserIdentity extends BaseEntity {
     @Column(nullable = false)
     private UUID userId;
 
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,6 +46,14 @@ public class UserIdentity extends BaseEntity {
 
     public void setUserId(UUID userId) {
         this.userId = userId;
+    }
+
+    public UUID getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(UUID tenantId) {
+        this.tenantId = tenantId;
     }
 
     public IdentityType getType() {

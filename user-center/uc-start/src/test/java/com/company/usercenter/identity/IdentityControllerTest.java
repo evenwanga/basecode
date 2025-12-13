@@ -39,22 +39,30 @@ class IdentityControllerTest {
     void meShouldReturnProfileWhenAuthenticated() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("bob@example.com", "N/A",
-                        java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")))
-        );
+                        java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))));
+        UUID tenantId = UUID.randomUUID();
+        com.company.platform.jpa.TenantContext.setTenantId(tenantId.toString());
 
         User user = new User();
         setId(user, UUID.randomUUID());
         user.setDisplayName("Bob");
         user.setPrimaryEmail("bob@example.com");
         user.setStatus("ACTIVE");
-        when(identityService.findByIdentifier("bob@example.com", UserIdentity.IdentityType.LOCAL_PASSWORD))
+
+        // Use any() for tenantId matcher if needed, or specific tenantId
+        when(identityService.findByIdentifier(org.mockito.ArgumentMatchers.eq(tenantId),
+                org.mockito.ArgumentMatchers.eq("bob@example.com"),
+                org.mockito.ArgumentMatchers.eq(UserIdentity.IdentityType.LOCAL_PASSWORD)))
                 .thenReturn(Optional.of(user));
-        when(identityService.findByEmail("bob@example.com")).thenReturn(Optional.of(user));
+        when(identityService.findByEmail(org.mockito.ArgumentMatchers.eq(tenantId),
+                org.mockito.ArgumentMatchers.eq("bob@example.com")))
+                .thenReturn(Optional.of(user));
 
         ApiResponse<UserProfileResponse> resp = controller.me();
 
         assertThat(resp.success()).isTrue();
         assertThat(resp.data().displayName()).isEqualTo("Bob");
+        com.company.platform.jpa.TenantContext.clear();
     }
 
     private void setId(Object target, UUID id) {
